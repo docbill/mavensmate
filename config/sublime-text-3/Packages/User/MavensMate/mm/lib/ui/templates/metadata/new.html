@@ -1,0 +1,178 @@
+{% extends "layouts/base.html" %}
+{% block yield %}
+<div id="result_output">
+	<div class="alert alert-error">
+		<button type="button" class="close fui-cross"></button>
+		<span id="error_message"></span>
+	</div>
+</div>
+
+<div class="content">
+		 
+	<ul class="nav nav-tabs nav-append-content">
+		<li class="active"><a id="project_details_tab" href="#form" data-toggle="tab">New Metadata Details</a></li>
+	</ul>
+	
+	<div class="tab-content" id="main-tab-content">
+		<div id="form" class="tab-pane active">
+			<form class="form-stacked">
+				<fieldset>
+					<div class="control-group large">
+						<select id="template" class="select-block mbl info span12">
+							<option value="">Select a metadata template</option>
+							{% for t in template_list %}
+								<option value="{{ t['name'] }}">{{ t['name'] }}</option>
+							{% endfor %}
+						</select>
+					</div>
+
+					<div id="template_params">
+
+					</div>
+				</fieldset>
+			</form>
+		</div>
+	</div>
+</div>
+
+{% endblock %}
+
+
+{% block buttons %}					
+	<input type="button" id="btnSubmit" class="btn btn-info btn-embossed btn-embossed" value="Create Metadata"  onclick='newMetadata();'>
+	<button class="btn btn-embossed" onclick="closeWindow();">Cancel</button>
+{% endblock %}
+
+{% block body_js %}
+
+	<script type="text/javascript">
+		var response;
+		var operation;
+		var templates = {{ templates }}
+		
+		function getTemplateDefinition() {
+			operation = "get_templates";
+			$.ajax({
+				type: "GET",
+				url: "{{ base_local_server_url() }}/generic", 
+				data: JSON.stringify({
+					project_name 		: '{{ name }}',
+					project_location	: $("#STATIC-project-location").val(),
+					command 			: "get_templates"	
+				}),
+				beforeSend: function() { showLoading('Creating new Ma'); },
+				complete: function(data){
+					global_init_handler(data);
+				} 
+		 	});	
+		}
+
+		function newMetadata() {
+			operation = "new_metadata";
+			$.ajax({
+				type: "POST",
+				dataType: 'json',
+				contentType: 'application/json; charset=utf-8',
+				url: "{{ base_local_server_url() }}/generic/async", 
+				data: JSON.stringify({
+					project_name 		: '{{ name }}',
+					project_location	: $("#STATIC-project-location").val(),
+					command 			: 'new_metadata'
+				}),
+				beforeSend: function() { showLoading('Creating new metadata...'); },
+				complete: function(data){
+					global_init_handler(data);
+				} 
+		 	});
+		}
+
+		function handle_response(response) {
+			if (operation == "get_templates") {
+				if (response["success"] === false) {
+					show_message(response["body"]);
+					notifySound();
+				} else {
+					//
+				}
+				hideLoading();
+			} else if (operation == "new_metadata") {
+				if (response["success"] === false) {
+					show_message(response["body"]);
+					notifySound();
+				} else {
+					closeWindow();
+				}
+				hideLoading();
+			}
+		}
+	
+		var user_action = "{{ user_action }}";
+			
+		$(function() {		   									
+		    
+		    $("#template").change(function() {
+		    	var value = $(this).val();
+		    	var template = null;
+		    	var paramsHtml = '';
+
+		    	if (value === null || value === '') {
+		    		paramsHtml = '';
+		    	} else {
+		    		for (t in templates) {
+		    			if (templates[t].name === value) {
+		    				console.log('our template!');
+		    				console.log(templates[t]);
+		    				template = templates[t];
+		    				break;
+		    			}
+		    		}
+		    		for (p in template.params) {
+		    			paramsHtml += '<div class="control-group large"><input class="span12" type="text" placeholder="'+template.params[p].description+'"/></div>';
+		    		}
+		    	}
+		    	
+		    	$("div#template_params").html(paramsHtml);
+		    	
+		    });
+
+			$(window).resize(function() {
+				resizeProjectWrapper(10);
+			});
+
+			window.resizeTo(675, 750);
+			centerWindow();
+
+			//submit form on enter
+			$(".content").bind('keyup', function(e) {
+				var code = (e.keyCode ? e.keyCode : e.which);
+				 if(code == 13) { //enter pressed
+				 	if ($('#un').val() && $('#pw').val() && $('#pn').val())
+						$("#btnSubmit").click();
+				 }
+			});  
+
+			$("#org_type").change(function() {
+				if ($(this).val() == 'custom') {
+					$("#custom-url").show();
+				} else {
+					$("#custom-url").hide();
+					$("#custom-url").val('');
+				}
+			});
+
+			//when user changes tab to metadata selection, use provided creds to login and get session id
+			$('a[data-toggle="tab"]').on('shown', function (e) {
+				//console.log(e.target.href.indexOf("metadata"))
+				if ((e.target.href.indexOf("metadata") != -1 || e.target.href.indexOf("advanced") != -1) && ($('#sid').val() === null || $('#sid').val() === "")) {
+					//console.log('checking creds');
+					operation = "check_creds";
+					populateMetadataTree('Attempting to authenticate to Salesforce using the provided credentials');
+				}
+		    });
+
+		});
+
+		
+								
+	</script>
+{% endblock %}

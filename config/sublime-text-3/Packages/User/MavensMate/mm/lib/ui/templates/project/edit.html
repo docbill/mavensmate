@@ -1,0 +1,349 @@
+{% extends "layouts/base.html" %}
+{% block yield %}
+<div id="result_output">
+	<div class="alert alert-error">
+		<button type="button" class="close fui-cross"></button>
+		<span id="error_message"></span>
+	</div>
+</div>
+
+<div class="content">	
+	<ul class="nav nav-tabs nav-append-content">
+		<li class="">
+			<a id="project_details_tab" href="#form" data-toggle="tab">Project Details</a>
+		</li>
+		<li><a href="#advanced" data-toggle="tab">Advanced</a></li>
+		<li class="active">
+			<a href="#metadata" data-toggle="tab">
+				Project Metadata &nbsp;&nbsp;
+				<span onclick="index_org(true)" class="label" style="line-height:15px;cursor:pointer;">
+					Refresh <i class="icon-refresh"></i>
+				</span> 	
+			</a>
+		</li>
+	</ul>
+	
+	<div class="tab-content" id="main-tab-content">  
+		<div id="form" class="tab-pane">
+			<form class="form-stacked">
+				<fieldset>
+					<div class="control-group large disabled">
+						<input class="span12" placeholder="Project Name" type="text" id="pn" disabled="disabled">
+						<i class="input-icon fui-lock"></i>
+					</div>
+					<div class="control-group large">
+						<input class="span12" placeholder="Salesforce.com Username" type="text" id="un">
+					</div>
+					<div class="control-group large">
+						<input class="span12" placeholder="Salesforce.com Password" type="password" id="pw">
+					</div>
+
+					<div class="clearfix">
+						<select class="org_type select-block mbl info span12">
+							<option value="production">Production</option>
+							<option value="developer">Developer</option>
+							<option value="sandbox">Sandbox</option>
+							<option value="prerelease">Prerelease</option>
+							<option value="custom">Custom URL</option>
+						</select>
+					</div>
+					<div class="control-group large">
+						<input class="span12" placeholder="Example: https://na1-blitz01.salesforce.com" type="text" id="custom-url" style="display:none;">
+					</div>
+					<div class="clearfix" style="margin-top:20px;">
+						<a class="btn btn-success btn-embossed" onclick="updateProjectCreds();">
+							Update Credentials
+						</a>
+					</div> 												
+				</fieldset>
+				<div id="treeold"></div>
+			</form>
+		</div>
+
+		<div id="advanced" class="tab-pane">
+			<form class="form-stacked" style="padding-top:10px;">
+				<fieldset>
+					<div class="clearfix">
+						<label for="subscription" style="font-weight:bold;">Metadata Subscription List</label> 
+						<select name="huge" class="select-block mbl info" style="display:none;" id="subscription" multiple="multiple" data-placeholder="Select 1 or more metadata types..." data-selected-text-format="count>3" data-size="20">
+							{% for m in metadata_types() %}
+								{% if m['xmlName'] in project_settings()['subscription'] %}
+									{% set selected = 'selected="selected"' %}
+								{% else %}
+									{% set selected = '' %}
+								{% endif %}
+								<option {{ selected }} value="{{ m['xmlName'] }}">
+									{{ m['xmlName'] }}
+								</option>
+							{% endfor %} 
+						</select>	
+					</div>
+					<div class="clearfix" style="margin-top:0px;">
+						<a class="btn btn-success btn-embossed" onclick="updateSubscription();">
+							Update Subscription
+						</a>
+					</div> 
+					<div class="alert alert-info" style="margin-top:20px">
+						<ul>
+							<li>
+								If you only plan to work with certain metadata types in this project, specify those types here. Otherwise, MavensMate will index each metadata type available in your org. In larger orgs, this can negatively impact performance. 
+							</li>
+							<li>
+								The default list of metadata types is controlled by your plugin client's <strong>mm_default_subscription</strong> setting.
+							</li>
+							<li>
+								Once you've selected your metadata, be sure to click the "Update Subscription" button.
+							</li>
+						</ul>
+						
+					</div>			
+				</fieldset>
+			</form>
+		</div>
+
+		<div id="metadata" class="tab-pane active">
+			<div class="alert alert-info" id="filter">
+				<input type="text" placeholder="Search for metadata" id="txtFilter" style="width:300px;height:35px;" />
+				<a href="#" class="btn btn-success btn-embossed" id="search-btn" style="right:45px"><i class="icon-search"></i></a>
+				<a href="#" class="btn btn-select btn-embossed" id="select-btn" ><i class="icon-check-empty"></i></a>
+			</div>
+			<div id="project_wrapper">
+				<div id="treewrapper" style="height:100%;">
+					<div id="tree"></div>
+					<div id="info"></div>
+				</div>
+			</div>				
+    	</div>
+	</div>
+</div>  
+{% endblock %}  
+
+{% block buttons %}					
+	<input type="button" id="btnSubmit" class="btn btn-info btn-embossed" value="Update Project"  onclick="updateProject();">
+	<button type="reset" class="btn btn-embossed" onclick="closeWindow();">Cancel</button>
+{% endblock %}  
+
+{% block body_js %}
+	<script>
+		var has_indexed_metadata = {{ has_indexed_metadata|lower }};
+		var operation;
+		
+		function updateProjectCreds() {
+			console.log('updating project creds')
+			operation = "update_creds"
+			$.ajax({
+				type: "POST",
+				dataType: 'json',
+				contentType: 'application/json; charset=utf-8',
+				url: "{{ base_local_server_url() }}/generic", 
+				data: JSON.stringify({
+					username 			: $("#un").val(),
+			    	password 			: $("#pw").val(),
+			    	org_type 			: $(".org_type").val(),
+			    	override_session 	: true,
+			    	defer_connection 	: true,
+			    	project_name 		: '{{ name }}',
+			    	org_url 			: $("#custom-url").val(), 
+			    	project_location	: $("#STATIC-project-location").val(),
+			    	command 			: "update_credentials"
+				}),
+				beforeSend: function() { showLoading('Updating project credentials'); },
+				complete: function(data){
+					console.log(data)				
+					var response = JSON.parse(data.responseText)
+					if (response["success"] == false) {
+						show_message(response["body"])
+					} else {
+						show_message(response["body"], 'success', true)
+					}
+					hideLoading();
+				}
+			});
+		}
+
+		function updateSubscription() {
+			console.log('updating project subscription')
+			operation = "update_subscription"
+			$.ajax({
+				type: "POST",
+				dataType: 'json',
+				contentType: 'application/json; charset=utf-8',
+				url: "{{ base_local_server_url() }}/generic", 
+				data: JSON.stringify({
+			    	project_name 		: '{{ name }}',
+			    	project_location	: $("#STATIC-project-location").val(),
+			    	subscription 		: $("#subscription").val(),
+			    	command 			: "update_subscription"
+				}),
+				beforeSend: function() { showLoading('Updating project subscription'); },
+				complete: function(data){
+					console.log(data)				
+					var response = JSON.parse(data.responseText)
+					if (response["success"] == false) {
+						show_message(response["body"])
+					} else {
+						show_message_with_custom_action(response["body"], 'success', 'Refresh Index', 'hide_message();index_org(true)')
+					}
+					hideLoading();
+				}
+			});
+		}
+
+
+
+		function updateProject() {
+			console.log('updating project')
+			operation = "update"
+			$.ajax({
+				type: "POST",
+				dataType: 'json',
+				contentType: 'application/json; charset=utf-8',
+				url: "{{ base_local_server_url() }}/generic/async", 
+				data: JSON.stringify({
+					package 			: get_tree(),
+					project_name 		: '{{ name }}',
+					project_location	: $("#STATIC-project-location").val(),
+					command 			: 'edit_project'
+				}),
+				beforeSend: function() { showLoading('Updating project'); },
+				complete: function(data){
+					global_init_handler(data)
+				} 
+			});
+		}
+
+		function index_org(refresh) {
+			console.log('indexing org')
+			operation = "index"
+			$.ajax({
+				type: "POST",
+				dataType: 'json',
+				contentType: 'application/json; charset=utf-8',
+				url: "{{ base_local_server_url() }}/generic/async", 
+				data: JSON.stringify({
+					project_name 		: '{{ name }}',
+					project_location	: $("#STATIC-project-location").val(),
+					command 			: 'index_metadata'
+				}),
+				beforeSend: function() { showLoading('Updating the metadata index for this project. This operation can take a few minutes in large orgs.<br/><br/>Thanks for being patient! :)'); },
+				complete: function(data, status, xhr){
+					global_init_handler(data)				
+				} 
+			});
+		}
+
+		function handle_response(response) {
+			if (operation == "index") {
+				if (response["success"] == false) {
+					show_message(response["body"])
+				} else {
+					if (tree === undefined) {
+						renderTree()  
+					} else {
+						$("#tree").dynatree("getTree").reload();
+					}
+				}
+				notifySound()
+				hideLoading();
+			} else if (operation == "update") {
+				if (response["success"] == false) {
+					show_message(response["body"])
+				} else {
+					show_message("Project updated successfully.", "success", true)
+				}
+				notifySound()
+				hideLoading();
+			}
+			resizeProjectWrapper()
+		}
+
+		function positionInputIcons() {
+			var siblingInputWidth = $(".input-icon.fui-lock").prev().width();
+			$(".input-icon.fui-lock").css('right', '0px');
+			$(".input-icon.fui-lock").css('width', '20px');
+			$(".input-icon.fui-lock").css('left', siblingInputWidth-30+'px');
+		}
+			
+		$(function() {		
+			$("#pn").val("{{ name }}");  
+			$("#un").val("{{ username }}");
+			$("#pw").val("{{ password }}");
+			$("select.org_type").val("{{ org_type }}");
+			$("select.org_type").change();
+			$("#custom-url").val("{{ org_url }}");
+			if ($("#custom-url").val() != '') {
+				$("#custom-url").show()
+			}
+
+			$("#pn").prop('disabled', true);  
+
+			$(window).resize(function() {
+				resizeProjectWrapper();
+				positionInputIcons();
+			});
+
+			$("ul.nav-tabs li a span").hover(
+				function() {
+					$(this).addClass("label-success")
+				},
+				function() {
+					$(this).removeClass("label-success")
+				}
+			)
+
+			$("select.org_type").change(function() {
+				if ($(this).val() == 'custom') {
+					$("#custom-url").show()
+				} else {
+					$("#custom-url").hide()
+					$("#custom-url").val('')
+				}
+			})
+
+			$("#select-btn").click(function() {
+				if ($(this).html().indexOf('icon-check-empty') !== -1) {
+					$("#tree").dynatree("getRoot").visit(function(node){
+						if ($("#txtFilter").val() == '') {
+							if (node.data.cls !== 'hidden')
+								node.select(true);
+						} else {
+							if (node.data.level != 1 && node.data.cls !== 'hidden')
+								node.select(true);
+						}
+					});
+					$(this).html('<i class="icon-check"></i>')
+				} else {
+					$("#tree").dynatree("getRoot").visit(function(node){
+						if ($("#txtFilter").val() == '') {
+							if (node.data.cls !== 'hidden')
+								node.select(false);
+						} else {
+							if (node.data.level != 1 && node.data.cls !== 'hidden')
+								node.select(false);
+						}
+					});
+					$(this).html('<i class="icon-check-empty"></i>')
+				}
+			})
+
+			$('a[data-toggle="tab"]').on('shown', function (e) {
+				if (e.target.href.indexOf("form") != -1) {
+					positionInputIcons()	
+				}
+		    });
+
+		    window.resizeTo(700, 750)
+		    positionInputIcons()
+		    centerWindow()
+
+		    if (has_indexed_metadata) {
+		    	renderTree()
+		    	setTimeout(resizeProjectWrapper(),500)
+		    } else {
+		    	index_org()
+		    }
+
+		});
+	</script>
+
+{% endblock %}

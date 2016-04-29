@@ -1,0 +1,121 @@
+{% extends "layouts/base.html" %}
+{% block yield %}
+
+<link rel="stylesheet" href="{{ static_resource_path() }}/{{ support_dir }}/ui/resources/css/health.css"></link>
+
+<div id="result_output">
+	<div class="alert alert-error">
+		<button type="button" class="close fui-cross"></button>
+		<span id="error_message"></span>
+	</div>
+</div>
+
+<div class="content">
+	<h5 style="border-bottom: 3px solid rgb(52, 73, 94);padding-bottom: 10px;position:relative;">
+		Project Health Check
+		<!-- <div style="position:absolute;right:5px;top:4px;">
+			<div style="background:#f9f9f9;border-radius:5px;">
+				<span>95%</span>
+			</div>
+		</div> -->
+	</h5>
+	<div id="report_body" style="margin-top:20px;"></div>
+</div>  
+	
+{% endblock %}
+
+
+{% block buttons %}					
+	<button id="" class="btn btn-info btn-embossed" onclick="run_health_check();">Analyze Project</button>
+	<button id="btnCancel" class="btn btn-embossed" onclick="closeWindow();">Close</button>
+{% endblock %}
+
+{% block body_js %}
+	<script type="text/javascript">
+		
+		function run_health_check() {
+			$.ajax({
+				type: "POST",
+				url: "{{ base_local_server_url() }}/generic/async", 
+				dataType: 'json',
+				contentType: 'application/json; charset=utf-8',
+				data: JSON.stringify({
+			    	project_name 		: '{{ name }}',
+			    	project_location	: $("#STATIC-project-location").val(),
+			    	command 			: "project_health_check"
+				}),
+				beforeSend: function() { showLoading('Analyzing MavensMate project...'); },
+				complete: function(data){	
+					global_init_handler(data);	
+				} 
+			});
+		}
+
+		function open_file(el, file_name, line_number) {
+			$(el).html('<span class="typ">Opening...</span>');
+			$(el).removeClass('btn-info');
+
+			$.ajax({
+				type: "POST",
+				url: "{{ base_local_server_url() }}/generic", 
+				dataType: 'json',
+				contentType: 'application/json; charset=utf-8',
+				data: JSON.stringify({
+			    	project_name 		: '{{ name }}',
+			    	project_location	: $("#STATIC-project-location").val(),
+			    	file_name			: file_name,
+			    	line_number			: line_number,
+			    	command 			: "open_file_in_client"
+				}),
+				beforeSend: function() { 
+					//showLoading('Opening file in Sublime Text...'); 
+				},
+				complete: function(data){	
+					console.log(data);
+					try {
+						var response = JSON.parse(data.responseText)
+						if (response["success"] === true) {
+							//nothing?
+						} else {
+							show_message(response["body"]);
+							notifySound();
+						}
+						hideLoading();
+					} catch(e) {
+						console.log(e);
+						show_message(e);
+						notifySound();
+						hideLoading();
+					}
+					$(el).html('<span class="typ">View</span>');
+					$(el).addClass('btn-info');
+				} 
+			});
+		}
+
+		function handle_response(response) {
+			console.log(response)
+			if (response["success"] == true) {
+				$("#report_body").html((response["body"]))
+				notifySound()
+				window.prettyPrint && prettyPrint()
+			} else {
+				show_message(response["body"])
+				notifySound()
+			}
+			hideLoading();
+		}
+			
+		$(function() {		   
+			$("a.match-label").live('click', function() {
+			  $(this).next().toggle()
+			})
+
+			window.resizeTo(1000, 800)
+			centerWindow()
+			run_health_check()
+		});	
+
+	</script>
+
+{% endblock %}

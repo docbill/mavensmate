@@ -1,0 +1,251 @@
+/* 
+
+MavensMate v6.0.0 settings
+NOTE: MavensMate user settings will override MavensMate default settings
+To override default MavensMate settings, modify user-specific settings (MavensMate --> Settings --> User) 
+** Most changes require a SublimeText restart **
+*/
+
+{
+	//set to absolute location where you wish your MavensMate project to reside
+	//if the location does not exist, MavensMate will attempt to create it
+	//for example: "/Users/username/Documents/workspaces/mavensmate" (notice the absolute path)
+	//WINDOWS USERS: it's probably best to set this like so: C:\\path\\to\\your\\workspace
+	//****NEW****: you can now set mm_workspace to an array of locations on your file system
+	//EXAMPLE:
+	// "mm_workspace" : [
+	// 		"/my/workspace",
+	// 		"/my/other/workspace",
+	// 		"/my/super/secret/workspace"
+	// ]
+	"mm_workspace" : "",
+
+	//set if you're behind a proxy (you can also set via export HTTP_PROXY, export HTTPS_PROXY)
+	//----IMPORTANT: you MUST escape the 2 slashes after http: and https: as shown below (dont ask, it's a dumb JSON-with-comments parsing issue)
+	//examples: 
+	// 	"mm_http_proxy"  : "http:\/\/10.10.1.10:3128",
+	// 	"mm_https_proxy" : "http:\/\/10.10.1.10:1080"
+	//
+	// HTTP Basic Auth
+	// 	"mm_http_proxy"  : "http:\/\/user:pass@10.10.1.10:3128/",
+	// 	"mm_https_proxy" : "http:\/\/user:pass@10.10.1.10:1080/"
+
+	"mm_http_proxy" : "",
+
+	"mm_https_proxy" : "",
+
+	//set to desired Salesforce.com API version (tooling api functionality requires 27.0+)
+	"mm_api_version" : "31.0",
+
+	//generate from https://mavensmate.herokuapp.com. used to capture high-level usage statistics for community functionality like collaboration, gamification
+	"mm_community_api_token" : "",
+
+	//if true, MavensMate will automatically hide the debug panel upon a successful operation
+	"mm_hide_panel_on_success" : true,
+
+	//the amount of time (in seconds) before MavensMate hides the debug panel upon a successful operation
+	"mm_hide_panel_time" : 0,
+
+	//if true, MavensMate will capture the save file operation and compile to the Salesforce.com server automatically 
+	"mm_compile_on_save" : true,
+
+	//if false, mavensmate will store/retrieve sensitive data like passwords in a less secure way
+	//set to false only if having issues specifically with keyring or gnome-keyring
+	"mm_use_keyring" : true,
+
+	//if true, MavensMate will check for server conflicts and present a server diff when it finds a conflict
+	"mm_compile_check_conflicts": true,
+
+	//if true, MavensMate will present local/server diff view when conflict is found for the purposes of merging changes (beta)
+	"mm_diff_server_conflicts": true,
+
+	//if true, MavensMate will scroll to the line of a reported exception when there is a compilation error
+	"mm_compile_scroll_to_error": true,
+
+	//if true, MavensMate will rollback compiles when an error is encountered
+	"mm_compile_rollback_on_error": true,
+
+	//if true, MavensMate will hook into the Sublime Text completions API to offer code assistance
+	"mm_autocomplete" : true,
+
+	//if true, MavensMate will check for updates to the mm executable when Sublime Text starts
+	"mm_check_for_updates" : true,
+
+	//if true, MavensMate will look for and download pre-releases (beta versions) of the MavensMate API, mm
+	"mm_beta_user" : false,
+
+	//if true, MavensMate will automatically install updates to the MavensMate API, mm
+	"mm_auto_install_mm_updates" : true,
+
+	//possible values: CRITICAL, ERROR, WARNING, DEBUG, INFO
+	"mm_log_level" : "INFO",
+
+	//location where mm debug log should be placed (must be existing path)
+	//windows users: please set like so: C:\\path\\to\\your\\logs
+	"mm_log_location" : "",
+
+	//if true, mavensmate will send usage statistics (NEVER sensitive information like usernames/passwords/etc) for development, reporting, & debugging purposes (see util.py for source of the call)
+	"mm_send_usage_statistics" : true,
+
+	//the path of the mm command line tool
+	//"default" means the mm directory is a top-level directory in the package root (MavensMate/mm)
+	//if you want MavensMate for Sublime Text to point to a different mm install, please set its path here (some/other/directory/mm)
+	"mm_path" : "default",
+
+	//if true, mavensmate will open UIs in default browser
+	//linux/windows users: mavensmate UIs are static HTML files, so ensure your browser is set up to open .HTML files by default
+	"mm_use_browser_as_ui" : false, 
+
+	//(advanced users only) set to true if you want to use python 2.7 to run mm.py (mm_python_location and mm_py_location must be set)
+	"mm_developer_mode" : false,
+
+	//set to location of your python 2.7 install (mm_developer_mode must be set to true)
+	"mm_python_location" : "/usr/bin/python",
+
+	//if you wish to run mm via python, you must set this to the location of your mm.py file
+	"mm_mm_py_location" : "/path/to/mm.py",
+
+	//linux users: the location of your "subl" executable
+	"mm_subl_location" : "/usr/bin/subl",
+
+	//windows users: set to the location of your sublime_text.exe
+	"mm_windows_subl_location" : "C:/Program Files/Sublime Text 3/sublime_text.exe",
+
+	//specify a path for custom wsdl files here. wsdls must be named: apex.xml, partner.xml, metadata.xml, tooling.xml
+	"mm_wsdl_path" : "",
+
+	//OSX only: the location of your Sublime Text install
+	"mm_plugin_client_location" : "/Applications",
+
+	//OSX only: the name of your plugin client app (Sublime Text.app, Sublime Text 3.app, etc.)
+	"mm_osx_plugin_client_app_name" : "Sublime Text 3.app",
+
+	//set to true to use the tooling api to compile apex metadata (if you're experiencing any compile issues, set this to false to use the metadata api)
+	"mm_compile_with_tooling_api" : true,
+
+	//set to true if you want a history of your executed apex scripts in project/apex-scripts
+	"mm_log_anonymous_apex" : true,
+
+	//local server port
+	"mm_server_port" : 7777,
+
+	//mavensmate will attempt to compile when savings files with the following extensions
+	"mm_apex_file_extensions": [
+		".page",
+		".component",
+		".cls",
+		".object",
+		".trigger",
+		".layout",
+		".resource",
+		".remoteSite",
+		".labels", 
+		".app",
+		".dashboard",
+		".permissionset",
+		".workflow",
+		".email",
+		".profile",
+		".scf",
+		".queue",
+		".reportType",
+		".report",
+		".weblink",
+		".tab",
+		".letter",
+		".role",
+		".homePageComponent",
+		".homePageLayout",
+		".objectTranslation",
+		".flow",
+		".datacategorygroup",
+		".snapshot",
+		".site",
+		".sharingRules",
+		".settings",
+		".callCenter",
+		".community",
+		".authProvider",
+		".customApplicationComponent",
+		".quickAction",
+		".approvalProcess",
+		".html",
+		".apxc",
+		".apxt"
+	],
+
+	//template location, e.g. "remote" or "local" ("remote" refers to templates located on github)
+	"mm_template_location": "remote",
+
+	//template location 
+	//if "mm_template_location" is set to "local", set to absolute location of the directory where you've forked the MavensMate-Templates project
+		//example: "mm_template_source" : "/path/to/templates"
+	//if "mm_template_location" is set to "remote", set to github location)
+		//example: "mm_template_source" : "username/reponame/branchname"
+	//project directory/repository must be in the format found here: https://github.com/joeferraro/MavensMate-Templates
+	"mm_template_source": "joeferraro/MavensMate-Templates/master",
+	
+	//the default metadata available in a project (may be set on a per-project basis in the "advanced" tab of the new and edit project UIs)
+	"mm_default_subscription" : [
+		"ApexClass",
+		"ApexComponent",
+		"ApexPage",
+		"ApexTrigger",
+		"StaticResource",
+		"CustomObject",
+		"Profile"
+	],
+
+	//ignore metadata from managed packages (highly recommended)
+	"mm_ignore_managed_metadata" : true,
+
+	//the number of the most recent apex debug logs to download during the "fetch logs" command
+	"mm_number_of_logs_limit" : 10,
+
+	//choices: "metadata" or "apex". "metadata" is recommended, however if your tests are taking forever to run, try switching to "apex"
+	//we're working on async testing api support in 0.36
+	"mm_test_api" : "metadata",
+
+	//if true, mavensmate will store all deployment packages in your project's "deploy" directory
+	"mm_archive_deployments" : true,
+	
+	//if true, mavensmate will set the purgeOnDelete to true during metadata deletes (a hard delete)
+	"mm_purge_on_delete" : false,
+
+	"mm_verbose" : false,
+
+	//set to false if during completions, the size of your .org_metadata file is bogging down the editor during code completion
+	"mm_use_org_metadata_for_completions" : true,
+
+	//set to false if index symbol indexing during project creation/upgrade is causing timeouts
+	"mm_mass_index_apex_symbols" : false,
+
+	//set to false if you want to use the async apex testing endpoint (beta)
+	"mm_use_legacy_test_ui" : true,
+
+	//if true, a log will be generated for every test run during "run all tests" command
+	"mm_download_logs_during_run_all_tests" : false,
+
+	//timeout (in seconds) for calls to the Salesforce.com servers
+	"mm_timeout" : 10,
+
+	//*BETA* if true, MavensMate will compare the state of the destination org(s) before deployment
+	"mm_compare_before_deployment" : true,
+
+	//Advanced users only: if true, MavensMate will not check if your project was created using an older version of MavensMate
+	"mm_skip_legacy_check" : false,
+
+    // set true to play notifiation sounds
+    "mm_play_sounds" : false,
+
+    // set true to play sounds on MM events (compile successes/failures, file refreshes, code coverage updates etc)
+    "mm_play_general_sounds" : true,
+    "mm_play_success_sounds" : true,
+    "mm_play_failure_sounds" : true,
+    
+    // set paths for custom MM event sounds; if empty/absent then the default will be used
+    // only .wav files allowed; Windows users should use double backslash for path: \\
+    "mm_general_sound_path" : "",
+    "mm_success_sound_path" : "",
+    "mm_failure_sound_path" : ""
+}

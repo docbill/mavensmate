@@ -1,0 +1,183 @@
+{% for res in result['test_results'] -%}
+	{% if res["detailed_results"] == [] %}{% continue %}{% endif %}
+
+	<div class="alert-message block-message-custom white" style="margin-bottom:0px;padding: 5px;-webkit-border-radius: 4px 4px 0px 0px;">
+			<p style="float:left;"><strong>{{ res["ApexClass"]["Name"] }}.cls</strong></p>
+			<p style="float:right;"><strong>{{ res["ExtendedStatus"] }}&nbsp;tests passed</strong></p>
+		<div style="clear:both;"></div>	
+	</div>
+
+	<table class="table table-striped test_result" style="-webkit-border-radius: 0px 0px 4px 4px;">
+		<thead>
+			<tr>
+				<th>Test Method</th>
+				<th>Result</th>
+				<th>Message</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for test in res["detailed_results"] -%}
+				<tr>
+					<td style="width:210px;">{{ test['MethodName'] }}</td>
+					<td style="width:45px;">
+						{% if "Outcome" in test and test["Outcome"] == 'Pass' -%}
+							<span class="label label-small label-success">Passed</span>
+						{% else %}
+							<span class="label label-small label-important">Failed</span>
+						{%- endif %}
+					</td>
+					<td>
+						{% if 'Message' in test and test['Message'] != None %}
+							{{ test['Message'] }} 
+						{% endif %}
+						{% if 'StackTrace' in test and test['StackTrace'] != None -%}
+							<br/><br/>
+							<span class="label">Stack Trace</span><br/>{{ test['StackTrace'] }}
+						{%- endif %}
+					</td>
+				</tr>
+			{%- endfor %}
+		</tbody>
+	</table>
+{%- endfor %} 
+
+<div id="class_wrapper">
+	<!-- START CLASS PROCESSING -->
+	{% for r in result['coverage'] -%}
+		{% if r["ApexClassOrTrigger"] == "ApexClass"  -%}
+		{% set coverage = r['percentCovered'] %}
+		{% set coverage_class = r['coverageLevel'] %}
+		{% set display = "block" %}
+		{% set extension = "cls"  %}
+		{% set directory = "classes" %}
+
+		<div class="alert alert-{{ coverage_class }}">
+		  	
+			<h3>
+				<div style="float:left;">
+					{{ r['ApexClassOrTriggerName'] }}.{{ extension }}
+				</div>
+				<div style="float:right;text-align:right;">
+					({{ coverage }}% covered)
+				</div>
+				<div style="clear:both;"></div>
+			</h3>
+
+			<div class="progress" style="height:22px;margin:10px 0px;">
+				<div class="bar bar-{{ coverage_class }}" style="width: {{ coverage }}%;"></div>
+			</div>
+
+			{% if does_file_exist(r['ApexClassOrTriggerName'], 'ApexClass') == True -%}
+		    	<a href="#" class="btn btn-mini btn-info" onclick="toggleSourceButton(this, {{ loop.index }}, 'class')">Show Coverage</a>
+			{%- endif %}
+		</div>
+
+			{% if does_file_exist(r['ApexClassOrTriggerName'], 'ApexClass') == True -%}
+			<table class='code' id="class_code_result_{{ loop.index }}">
+				<tbody>
+					{% for line in get_file_lines(r['ApexClassOrTriggerName'], 'ApexClass') -%} 
+						{% set file_line_number = loop.index %}
+						{% set td_class = [] %}
+						{% if 'Coverage' in r and 'uncoveredLines' in r['Coverage'] -%}
+							{% for location in r['Coverage']['uncoveredLines'] -%}
+								{% if location|int == file_line_number -%}
+									{% if td_class.append(1) %}{% endif %}
+									{% break %}
+								{%- endif %}
+							{%- endfor %}
+						{%- endif %}
+						
+						{% if td_class -%}
+						   	<tr>
+						    	<td class="line_numbers">{{ file_line_number }}</td>
+						    	<td class="code not_covered">{{ htmlize(line) }}</td>
+							</tr>
+						{% else %}
+							<tr>
+						    	<td class="line_numbers">{{ file_line_number }}</td>
+						    	<td class="code covered"> {{ htmlize(line) }} </td>
+							</tr>
+						{%- endif %}
+						
+					{%- endfor %}
+				</tbody>
+			</table>
+			{%- endif %}
+		{%- endif %}
+	{%- endfor %} 
+	<!-- END CLASS PROCESSING --> 
+</div>
+
+<div id="trigger_wrapper">
+	<!-- START CLASS PROCESSING -->
+	{% for r in result['coverage'] -%}
+		{% if r["ApexClassOrTrigger"] == "ApexTrigger"  -%}
+		{% set coverage = r['percentCovered'] %}
+		{% set coverage_class = r['coverageLevel'] %}
+		{% set display = "block" %}
+		{% set extension = "trigger"  %}
+		{% set directory = "triggers" %}
+
+		<div class="alert alert-{{ coverage_class }}">
+		  	
+			<h3>
+				<div style="float:left;">
+					{{ r['ApexClassOrTriggerName'] }}.{{ extension }}
+				</div>
+				<div style="float:right;text-align:right;">
+					({{ coverage }}% covered)
+				</div>
+				<div style="clear:both;"></div>
+			</h3>
+
+			<div class="progress" style="height:22px;margin:10px 0px;">
+				<div class="bar bar-{{ coverage_class }}" style="width: {{ coverage }}%;"></div>
+			</div>
+
+			{% if does_file_exist(r['ApexClassOrTriggerName'], 'ApexTrigger') == True -%}
+		    	<a href="#" class="btn btn-mini btn-info" onclick="toggleSourceButton(this, {{ loop.index }}, 'trigger')">Show Coverage</a>
+			{%- endif %}
+		</div>
+
+			{% if does_file_exist(r['ApexClassOrTriggerName'], 'ApexTrigger') == True -%}
+			<table class='code' id="trigger_code_result_{{ loop.index }}">
+				<tbody>
+					{% for line in get_file_lines(r['ApexClassOrTriggerName'], 'ApexTrigger') -%} 
+						{% set file_line_number = loop.index %}
+						{% set td_class = [] %}
+						{% if 'Coverage' in r and 'uncoveredLines' in r['Coverage'] -%}
+							{% for location in r['Coverage']['uncoveredLines'] -%}
+								{% if location|int == file_line_number -%}
+									{% if td_class.append(1) %}{% endif %}
+									{% break %}
+								{%- endif %}
+							{%- endfor %}
+						{%- endif %}
+						
+						{% if td_class -%}
+						   	<tr>
+						    	<td class="line_numbers">{{ file_line_number }}</td>
+						    	<td class="code not_covered">{{ htmlize(line) }}</td>
+							</tr>
+						{% else %}
+							<tr>
+						    	<td class="line_numbers">{{ file_line_number }}</td>
+						    	<td class="code covered"> {{ htmlize(line) }} </td>
+							</tr>
+						{%- endif %}
+						
+					{%- endfor %}
+				</tbody>
+			</table>
+			{%- endif %}
+		{%- endif %}
+	{%- endfor %} 
+	<!-- END CLASS PROCESSING --> 
+</div>
+
+<div id="log_wrapper" style="position:relative;">
+	<div class="alert alert-info">
+		<i class="icon-cogs icon-2x pull-left"></i>
+		Debug logs can now be found in your project's debug/tests/&lt;Apex_Class_Name&gt; directory.
+	</div>
+</div>
