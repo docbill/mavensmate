@@ -1,3 +1,3 @@
 #!/bin/bash
-/usr/bin/docker run -ti --rm -v /tmp/.X11-unix/:/tmp/.X11-unix/:z -v /var/lib/sss:/var/lib/sss:ro -v /tmp:/tmp:z -p 7777:7777 -e DISPLAY -e HOME -v "$HOME:$HOME:z" docbill/mavensmate
+/usr/bin/docker run -ti --rm -v /var/lib/sss:/var/lib/sss:ro -v /tmp:/tmp:z -p 7777:7777 -e DISPLAY -e HOME -v "$HOME:$HOME:z" docbill/mavensmate
 
